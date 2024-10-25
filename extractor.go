@@ -3,6 +3,7 @@ package yonginbustimetable
 import (
 	"context"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -72,4 +73,17 @@ type BusLink struct {
 	Route string `json:"route,omitempty"`
 	// WindowOpenLink a Extracted URL from button's onclick attribute
 	WindowOpenLink string `json:"windowOpenLink"`
+}
+
+// busNumberRegexp Regexp for Extract Bus number from Name
+//
+// If Name is "시내2번", it will extracted as "2"
+var busNumberRegexp = regexp.MustCompile(`(\d+[\d-]*)`)
+
+// ExtractBusNumber Extract Bus number using regexp and return exact bus number
+func (b *BusLink) ExtractBusNumber() string {
+	if b.Name == "" {
+		return ""
+	}
+	return busNumberRegexp.FindString(b.Name)
 }
