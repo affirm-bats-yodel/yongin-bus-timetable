@@ -3,7 +3,6 @@ package yonginbustimetable
 import (
 	"context"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
