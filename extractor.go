@@ -41,8 +41,8 @@ func (b *BusLinkExtractor) Extract(ctx context.Context) ([]*BusLink, error) {
 			return
 		}
 
-		// Trim `window.open(` and split using `,` quote
-		onClickSplitRes := strings.SplitN(strings.TrimPrefix(onClickValue, "window.open("), ",", 3)
+		// Trim `window.open(`, `'` and split using `,` quote
+		onClickSplitRes := strings.SplitN(strings.ReplaceAll(strings.TrimPrefix(onClickValue, "window.open("), "'", ""), ",", 3)
 		if len(onClickSplitRes) != 3 {
 			return
 		} else if popUpEndpoint := onClickSplitRes[0]; !strings.HasPrefix(popUpEndpoint, "/board") {
