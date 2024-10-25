@@ -2,7 +2,9 @@ package yonginbustimetable
 
 import (
 	"context"
+	"errors"
 	"io"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -10,13 +12,18 @@ import (
 )
 
 // NewBusListExtractor Create new BusListExtractor from Reader
-func NewBusListExtractor(r io.Reader) (*BusLinkExtractor, error) {
+func NewBusListExtractor(r io.Reader, urls ...string) (*BusLinkExtractor, error) {
+	var url string
 	doc, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
 		return nil, err
 	}
+	if urls != nil && urls[0] != "" {
+		url = urls[0]
+	}
 	return &BusLinkExtractor{
 		Doc: doc,
+		URL: url,
 	}, nil
 }
 
@@ -24,14 +31,30 @@ func NewBusListExtractor(r io.Reader) (*BusLinkExtractor, error) {
 type BusLinkExtractor struct {
 	// Doc Goquery Document
 	Doc *goquery.Document
+	// URL a Request URL to make full bus timetable url
+	URL string
 }
 
 // Extract the button elements
 func (b *BusLinkExtractor) Extract(ctx context.Context) ([]*BusLink, error) {
-	var links []*BusLink
+	var (
+		links  []*BusLink
+		absURL string
+	)
 
 	if err := ctx.Err(); err != nil {
 		return nil, err
+	}
+
+	if b.URL != "" {
+		u, err := url.Parse(b.URL)
+		if err != nil {
+			return nil, errors.Join(errors.New("extract url"), err)
+		} else if u.Scheme != "" {
+			absURL = u.Scheme + "://" + u.Host
+		} else {
+			absURL = "https://" + u.Host
+		}
 	}
 
 	b.Doc.Find("button").Each(func(i int, s *goquery.Selection) {
@@ -55,7 +78,7 @@ func (b *BusLinkExtractor) Extract(ctx context.Context) ([]*BusLink, error) {
 			links = append(links, &BusLink{
 				Name:           busName,
 				Route:          busRoute,
-				WindowOpenLink: popUpEndpoint,
+				WindowOpenLink: absURL + popUpEndpoint,
 			})
 		}
 	})
