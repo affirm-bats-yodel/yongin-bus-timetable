@@ -42,3 +42,35 @@ func TestBusLinkExtractor_Extract(t *testing.T) {
 		}
 	}
 }
+
+func TestBusLink_ExtractBusNumber(t *testing.T) {
+	var tc = []struct {
+		b       *yonginbustimetable.BusLink
+		equalTo string
+	}{
+		{
+			b: &yonginbustimetable.BusLink{
+				Name: "시내66번",
+			},
+			equalTo: "66",
+		},
+		{
+			b: &yonginbustimetable.BusLink{
+				Name: "시내66-4번",
+			},
+			equalTo: "66-4",
+		},
+		{
+			b: &yonginbustimetable.BusLink{
+				Name: "시내5700번",
+			},
+			equalTo: "5700",
+		},
+	}
+
+	for _, elem := range tc {
+		v := elem.b.ExtractBusNumber()
+		t.Log(v)
+		assert.Equal(t, elem.equalTo, v)
+	}
+}
