@@ -66,6 +66,12 @@ func TestBusLink_ExtractBusNumber(t *testing.T) {
 			},
 			equalTo: "5700",
 		},
+		{
+			b: &yonginbustimetable.BusLink{
+				Name: "마을201번",
+			},
+			equalTo: "201",
+		},
 	}
 
 	for _, elem := range tc {
