@@ -41,6 +41,9 @@ func (b *BusLinkExtractor) Extract(ctx context.Context) ([]*BusLink, error) {
 			return
 		}
 
+		busName := s.Find("b").First().Text()
+		busRoute := s.Find("span").First().Text()
+
 		// Trim `window.open(`, `'` and split using `,` quote
 		onClickSplitRes := strings.SplitN(strings.ReplaceAll(strings.TrimPrefix(onClickValue, "window.open("), "'", ""), ",", 3)
 		if len(onClickSplitRes) != 3 {
@@ -49,7 +52,8 @@ func (b *BusLinkExtractor) Extract(ctx context.Context) ([]*BusLink, error) {
 			return
 		} else {
 			links = append(links, &BusLink{
-				Name:           s.Text(),
+				Name:           busName,
+				Route:          busRoute,
 				WindowOpenLink: popUpEndpoint,
 			})
 		}
@@ -61,7 +65,11 @@ func (b *BusLinkExtractor) Extract(ctx context.Context) ([]*BusLink, error) {
 // BusLink Link information from `button` element
 type BusLink struct {
 	// Name Bus name
+	//
+	// extracted from button's b tag
 	Name string `json:"name"`
+	// Route Bus Route
+	Route string `json:"route,omitempty"`
 	// WindowOpenLink a Extracted URL from button's onclick attribute
 	WindowOpenLink string `json:"windowOpenLink"`
 }
