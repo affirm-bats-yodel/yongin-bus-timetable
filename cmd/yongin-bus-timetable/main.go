@@ -58,7 +58,7 @@ var CLI = &cli.App{
 				}
 
 				for _, elem := range busLinks {
-					log.Println("name", elem.Name, "route", elem.Route, "link", elem.WindowOpenLink)
+					log.Println("name", elem.ExtractBusNumber(), "route", elem.Route, "link", elem.WindowOpenLink)
 				}
 
 				return nil
