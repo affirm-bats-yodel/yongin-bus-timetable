@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -34,7 +35,25 @@ func (b *BusLinkExtractor) Extract(ctx context.Context) ([]*BusLink, error) {
 	}
 
 	b.Doc.Find("button").Each(func(i int, s *goquery.Selection) {
-		log.Println("index", i, "element", s.Text())
+		onClickValue, exist := s.Attr("onclick")
+		if !exist {
+			return
+		} else if !strings.HasPrefix(onClickValue, "window.open") {
+			return
+		}
+
+		// Trim `window.open(` and split using `,` quote
+		onClickSplitRes := strings.SplitN(strings.TrimPrefix(onClickValue, "window.open("), ",", 3)
+		if len(onClickSplitRes) != 3 {
+			return
+		} else if popUpEndpoint := onClickSplitRes[0]; !strings.HasPrefix(popUpEndpoint, "/board") {
+			return
+		} else {
+			links = append(links, &BusLink{
+				Name:           s.Text(),
+				WindowOpenLink: popUpEndpoint,
+			})
+		}
 	})
 
 	return links, nil
