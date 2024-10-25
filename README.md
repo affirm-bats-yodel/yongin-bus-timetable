@@ -2,6 +2,8 @@
 
 Yongin Bus Timetable Scraper &amp; Viewer using Go
 
+> See [README_ko.md](./README_ko.md) if you're a Korean.
+
 ## Why?
 
 * In Yongin, There are several buses are having a timetable.
