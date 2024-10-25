@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"net/http"
+	"strings"
 	"testing"
 
 	yonginbustimetable "github.com/affirm-bats-yodel/yongin-bus-timetable"
@@ -28,7 +29,7 @@ func TestBusLinkExtractor_Extract(t *testing.T) {
 	}
 	defer res.Body.Close()
 
-	busLinkExt, err := yonginbustimetable.NewBusListExtractor(res.Body)
+	busLinkExt, err := yonginbustimetable.NewBusListExtractor(res.Body, *url)
 	if err != nil {
 		t.Error("while creating busLinkExtractor", "error", err)
 		return
@@ -39,6 +40,7 @@ func TestBusLinkExtractor_Extract(t *testing.T) {
 		for _, elem := range busLinks {
 			assert.NotEmpty(t, elem.Name)
 			assert.NotEmpty(t, elem.WindowOpenLink)
+			assert.Equal(t, true, strings.HasPrefix(elem.WindowOpenLink, "http://"), elem.WindowOpenLink)
 		}
 	}
 }
