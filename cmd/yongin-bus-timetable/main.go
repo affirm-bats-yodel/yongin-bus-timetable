@@ -67,6 +67,7 @@ var CLI = &cli.App{
 				&cli.StringFlag{
 					Name:     "url",
 					Required: true,
+					Usage:    "url of the yongin-bus-terminal",
 					EnvVars: []string{
 						"YONGIN_BUS_TIMETABLE_EXTRACT_URL",
 					},
