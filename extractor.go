@@ -84,6 +84,9 @@ var busNumberRegexp = regexp.MustCompile(`(\d+[\d-]*)`)
 func (b *BusLink) ExtractBusNumber() string {
 	if b.Name == "" {
 		return ""
+	} else if v := busNumberRegexp.FindString(b.Name); v != "" {
+		return v
+	} else {
+		return b.Name
 	}
-	return busNumberRegexp.FindString(b.Name)
 }
