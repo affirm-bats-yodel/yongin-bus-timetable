@@ -43,7 +43,7 @@ var CLI = &cli.App{
 				}
 
 				log.Println("extract url from body")
-				busLinkExt, err := yonginbustimetable.NewBusListExtractor(res.Body)
+				busLinkExt, err := yonginbustimetable.NewBusListExtractor(res.Body, url)
 				if err != nil {
 					return cli.Exit(fmt.Errorf("error: creating bus list extractor: %v", err), 1)
 				}
