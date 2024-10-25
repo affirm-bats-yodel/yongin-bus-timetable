@@ -13,12 +13,12 @@ import (
 )
 
 var CLI = &cli.App{
-	Name:        "yongin-bus-table",
-	Description: "yongin bus table explorer",
+	Name:        "yongin-bus-timetable",
+	Description: "yongin bus timetable explorer",
 	Commands: []*cli.Command{
 		{
-			Name:  "extract",
-			Usage: "Extract a Bus List",
+			Name:  "sync",
+			Usage: "Extract a Bus List and save it to DB",
 			Action: func(c *cli.Context) error {
 				ctx, cancel := signal.NotifyContext(c.Context, syscall.SIGTERM, syscall.SIGINT)
 				defer cancel()
