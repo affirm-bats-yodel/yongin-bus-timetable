@@ -3,7 +3,10 @@ package yonginbustimetable
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
+	"log"
+	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -112,4 +115,58 @@ func (b *BusLink) ExtractBusNumber() string {
 	} else {
 		return b.Name
 	}
+}
+
+// NewBusTimetableExtractor Create a new TimetableExtractor
+func NewBusTimetableExtractor() *BusTimetableExtractor {
+	return &BusTimetableExtractor{}
+}
+
+// TimetableExtractor Bus Timetable Extractor
+type BusTimetableExtractor struct{}
+
+func (bte *BusTimetableExtractor) Extract(ctx context.Context, b *BusLink) (*BusTimetable, error) {
+	var bt BusTimetable
+
+	if b == nil {
+		return nil, errors.New("error: empty b (*BusLink)")
+	} else if b.WindowOpenLink == "" || !strings.HasPrefix(b.WindowOpenLink, "http") {
+		return nil, errors.New("error: empty b.WindowOpenLink")
+	}
+
+	log.Println("getting bus timetable information", "WindowOpenLink", b.WindowOpenLink)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", b.WindowOpenLink, nil)
+	if err != nil {
+		return nil, errors.Join(errors.New("error: creating request: "+b.WindowOpenLink), err)
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.Join(errors.New("error: get: "+b.WindowOpenLink), err)
+	} else if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error: response is not ok: %d", res.StatusCode)
+	}
+	defer res.Body.Close()
+
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return nil, errors.Join(errors.New("error: parsing body"), err)
+	}
+
+	doc.Find("table").Each(func(i int, s *goquery.Selection) {
+		// find stops via table's thead
+		s.Find("thead > tr").Each(func(j int, js *goquery.Selection) {
+			log.Println("found stop", js.Text())
+			bt.Stops = append(bt.Stops, js.Text())
+		})
+	})
+
+	return &bt, nil
+}
+
+// BusTimetable Bus Timetable Information
+type BusTimetable struct {
+	// Stops name of bus stops
+	Stops []string `json:"stops"`
 }
