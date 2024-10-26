@@ -150,5 +150,6 @@ func TestBusTimetableExtractor_Extract(t *testing.T) {
 
 	t.Log("got bus timetable", "timetable", timetable)
 
-	assert.NotEmpty(t, timetable.Stops, "there are more than bus stops required")
+	assert.NotEmpty(t, timetable.Stops, "there are more than one bus stops required")
+	assert.NotEmpty(t, timetable.Timetables, "there are more than one bus timetable required")
 }
