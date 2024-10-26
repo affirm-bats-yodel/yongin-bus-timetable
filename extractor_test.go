@@ -140,4 +140,15 @@ func TestBusTimetableExtractor_Extract(t *testing.T) {
 	firstBus := busList[0]
 
 	t.Log("extract bus", "firstBus", firstBus)
+
+	timetableExtractor := yonginbustimetable.NewBusTimetableExtractor()
+	timetable, err := timetableExtractor.Extract(ctx, firstBus)
+	if err != nil {
+		t.Error("getting bus timetable", "error", err)
+		return
+	}
+
+	t.Log("got bus timetable", "timetable", timetable)
+
+	assert.NotEmpty(t, timetable.Stops, "there are more than bus stops required")
 }
