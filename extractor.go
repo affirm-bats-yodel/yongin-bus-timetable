@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -134,8 +133,6 @@ func (bte *BusTimetableExtractor) Extract(ctx context.Context, b *BusLink) (*Bus
 		return nil, errors.New("error: empty b.WindowOpenLink")
 	}
 
-	log.Println("getting bus timetable information", "WindowOpenLink", b.WindowOpenLink)
-
 	req, err := http.NewRequestWithContext(ctx, "GET", b.WindowOpenLink, nil)
 	if err != nil {
 		return nil, errors.Join(errors.New("error: creating request: "+b.WindowOpenLink), err)
@@ -156,8 +153,21 @@ func (bte *BusTimetableExtractor) Extract(ctx context.Context, b *BusLink) (*Bus
 
 	doc.Find("table > thead > tr > th").Each(func(i int, s *goquery.Selection) {
 		// find stops via table's thead
-		log.Println("found stop", s.Text())
 		bt.Stops = append(bt.Stops, s.Text())
+	})
+
+	doc.Find("table > tbody > tr").Each(func(i int, s *goquery.Selection) {
+		// find timetable
+		s.Children().Each(func(j int, js *goquery.Selection) {
+			textValue := js.Text()
+			if textValue == "" {
+				return
+			}
+			bt.Timetables = append(bt.Timetables, &Timetable{
+				Stop:     bt.Stops[j],
+				DepartAt: textValue,
+			})
+		})
 	})
 
 	return &bt, nil
@@ -167,4 +177,13 @@ func (bte *BusTimetableExtractor) Extract(ctx context.Context, b *BusLink) (*Bus
 type BusTimetable struct {
 	// Stops name of bus stops
 	Stops []string `json:"stops"`
+	// Timetables List of bus timetables
+	Timetables []*Timetable `json:"timetables"`
+}
+
+type Timetable struct {
+	// Stop name of bus stop
+	Stop string `json:"stop"`
+	// DepartAt time of when bus is depart
+	DepartAt string `json:"departAt"`
 }
