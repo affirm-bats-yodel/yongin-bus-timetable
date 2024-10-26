@@ -154,12 +154,10 @@ func (bte *BusTimetableExtractor) Extract(ctx context.Context, b *BusLink) (*Bus
 		return nil, errors.Join(errors.New("error: parsing body"), err)
 	}
 
-	doc.Find("table").Each(func(i int, s *goquery.Selection) {
+	doc.Find("table > thead > tr > th").Each(func(i int, s *goquery.Selection) {
 		// find stops via table's thead
-		s.Find("thead > tr").Each(func(j int, js *goquery.Selection) {
-			log.Println("found stop", js.Text())
-			bt.Stops = append(bt.Stops, js.Text())
-		})
+		log.Println("found stop", s.Text())
+		bt.Stops = append(bt.Stops, s.Text())
 	})
 
 	return &bt, nil
