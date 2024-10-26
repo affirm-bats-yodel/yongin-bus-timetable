@@ -3,6 +3,8 @@ package yonginbustimetable_test
 import (
 	"context"
 	"flag"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -13,6 +15,23 @@ import (
 
 var url = flag.String("url", "", "url to test")
 
+// doGet handle Get Request and return body
+func doGet(ctx context.Context, reqURL string) (io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", reqURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	} else if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error: status is not OK: %d", res.StatusCode)
+	}
+
+	return res.Body, nil
+}
+
 func TestBusLinkExtractor_Extract(t *testing.T) {
 	if !assert.NotEmpty(t, url, "url should not be empty") {
 		return
@@ -20,16 +39,14 @@ func TestBusLinkExtractor_Extract(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", *url, nil)
-
-	res, err := http.DefaultClient.Do(req)
+	body, err := doGet(ctx, *url)
 	if err != nil {
-		t.Error("got error getting url: ", "url", url, "error", err)
+		t.Error("while getting body", "url", *url)
 		return
 	}
-	defer res.Body.Close()
+	defer body.Close()
 
-	busLinkExt, err := yonginbustimetable.NewBusListExtractor(res.Body, *url)
+	busLinkExt, err := yonginbustimetable.NewBusListExtractor(body, *url)
 	if err != nil {
 		t.Error("while creating busLinkExtractor", "error", err)
 		return
@@ -81,4 +98,46 @@ func TestBusLink_ExtractBusNumber(t *testing.T) {
 		t.Log(v)
 		assert.Equal(t, elem.equalTo, v)
 	}
+}
+
+func TestBusTimetableExtractor_Extract(t *testing.T) {
+	if !assert.NotEmpty(t, url) {
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	t.Log("getting bus list", "url", *url)
+
+	body, err := doGet(ctx, *url)
+	if err != nil {
+		t.Error("getting bus list", "error", err)
+		return
+	}
+	defer body.Close()
+
+	busListExt, err := yonginbustimetable.NewBusListExtractor(body, *url)
+	if err != nil {
+		t.Error("creating bus list extractor", "error", err)
+		return
+	}
+	busList, err := busListExt.Extract(ctx)
+	if err != nil {
+		t.Error("extracting bus list", "error", err)
+		return
+	} else if !assert.NotEmpty(t, busList) {
+		return
+	}
+
+	t.Log("closing body")
+
+	if err := body.Close(); err != nil {
+		t.Error("closing body", "error", err)
+		return
+	}
+
+	firstBus := busList[0]
+
+	t.Log("extract bus", "firstBus", firstBus)
 }
