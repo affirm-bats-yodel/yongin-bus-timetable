@@ -156,35 +156,40 @@ func TestBusTimetableExtractor_Extract(t *testing.T) {
 
 func TestTimetable_ExtractTime(t *testing.T) {
 	tcs := []struct {
-		tt    yonginbustimetable.Timetable
-		value string
+		tt           yonginbustimetable.Timetable
+		value        string
+		commentFound bool
 	}{
 		{
 			tt: yonginbustimetable.Timetable{
 				Stop:     "용인출발",
 				DepartAt: "6:05",
 			},
-			value: "6:05",
+			value:        "6:05",
+			commentFound: false,
 		},
 		{
 			tt: yonginbustimetable.Timetable{
 				Stop:     "용인출발",
 				DepartAt: "7:00(전세)평일운행",
 			},
-			value: "7:00",
+			value:        "7:00",
+			commentFound: true,
 		},
 		{
 			tt: yonginbustimetable.Timetable{
 				Stop:     "용인출발",
 				DepartAt: "10:35(전세)평일운행",
 			},
-			value: "10:35",
+			value:        "10:35",
+			commentFound: true,
 		},
 	}
 
 	for _, tc := range tcs {
-		s, _, err := tc.tt.ExtractTime()
+		s, b, err := tc.tt.ExtractTime()
 		assert.NoError(t, err)
 		assert.Equal(t, tc.value, s)
+		assert.Equal(t, tc.commentFound, b)
 	}
 }
