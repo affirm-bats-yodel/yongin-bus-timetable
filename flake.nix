@@ -15,6 +15,7 @@
             go
             marksman
             yaml-language-server
+            duckdb
           ];
         };
       }
