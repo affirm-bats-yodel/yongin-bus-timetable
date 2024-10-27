@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,7 +10,12 @@ import (
 	"syscall"
 
 	"github.com/affirm-bats-yodel/yongin-bus-timetable"
+	_ "github.com/marcboeker/go-duckdb"
 	"github.com/urfave/cli/v2"
+)
+
+const (
+	insertBusQuery = "INSERT INTO bus_lists (name) VALUES (?)"
 )
 
 var CLI = &cli.App{
@@ -24,6 +30,14 @@ var CLI = &cli.App{
 				defer cancel()
 
 				url := c.String("url")
+				duckdbPath := c.String("duckdb-path")
+
+				log.Println("open duckdb", "duckdbPath", duckdbPath)
+				db, err := sql.Open("duckdb", duckdbPath)
+				if err != nil {
+					return cli.Exit(fmt.Errorf("error: open duckdb: %q: %v", duckdbPath, err), 1)
+				}
+				defer db.Close()
 
 				log.Println("creating request with context", "url", url)
 
@@ -57,8 +71,23 @@ var CLI = &cli.App{
 					return cli.Exit(fmt.Errorf("error: closing response body: %v", err), 1)
 				}
 
+				log.Println("begin transaction")
+
+				tx, err := db.BeginTx(ctx, &sql.TxOptions{})
+				if err != nil {
+					return cli.Exit(fmt.Errorf("error: begin transaction: %v", err), 1)
+				}
+
 				for _, elem := range busLinks {
-					log.Println("name", elem.ExtractBusNumber(), "route", elem.Route, "link", elem.WindowOpenLink)
+					_, err := tx.ExecContext(ctx, insertBusQuery, elem.ExtractBusNumber())
+					if err != nil {
+						return cli.Exit(fmt.Errorf("error: inserting bus: %v", err), 1)
+					}
+				}
+
+				log.Println("commit transaction")
+				if err := tx.Commit(); err != nil {
+					return cli.Exit(fmt.Errorf("error: commit transaction: %v", err), 1)
 				}
 
 				return nil
@@ -70,6 +99,14 @@ var CLI = &cli.App{
 					Usage:    "url of the yongin-bus-terminal",
 					EnvVars: []string{
 						"YONGIN_BUS_TIMETABLE_EXTRACT_URL",
+					},
+				},
+				&cli.StringFlag{
+					Name:     "duckdb-path",
+					Required: true,
+					Usage:    "path of duckdb db file",
+					EnvVars: []string{
+						"YONGIN_BUS_TIMETABLE_DUCKDB_PATH",
 					},
 				},
 			},
