@@ -2,7 +2,7 @@
 CREATE TABLE bus_lists (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     create_at TIMESTAMP NOT NULL DEFAULT current_timestamp,
-    name VARCHAR NOT NULL
+    name VARCHAR UNIQUE NOT NULL
 );
 
 -- a Timetable of buses
