@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -181,9 +182,22 @@ type BusTimetable struct {
 	Timetables []*Timetable `json:"timetables"`
 }
 
+// timetableRegexp Extract Timetable from DepartAt
+var timetableRegexp = regexp.MustCompile(`([01]?\d|2[0-3]):[0-5]\d`)
+
 type Timetable struct {
 	// Stop name of bus stop
 	Stop string `json:"stop"`
 	// DepartAt time of when bus is depart
 	DepartAt string `json:"departAt"`
+}
+
+// ExtractTime Extract TIME from DepartAt
+func (t *Timetable) ExtractTime() (s string, commentFound bool, err error) {
+	if t.DepartAt == "" {
+		return "", false, errors.New("error: empty DepartAt")
+	}
+	v := timetableRegexp.Split(t.DepartAt, 2)
+	log.Println("regexp result", "result", v)
+	return "", false, nil
 }
