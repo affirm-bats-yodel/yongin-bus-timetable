@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -197,7 +196,6 @@ func (t *Timetable) ExtractTime() (s string, commentFound bool, err error) {
 	if t.DepartAt == "" {
 		return "", false, errors.New("error: empty DepartAt")
 	}
-	v := timetableRegexp.Split(t.DepartAt, 2)
-	log.Println("regexp result", "result", v)
-	return "", false, nil
+	v := timetableRegexp.FindString(t.DepartAt)
+	return v, v != "" && len(strings.ReplaceAll(t.DepartAt, v, "")) > 0, nil
 }
