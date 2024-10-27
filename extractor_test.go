@@ -173,6 +173,13 @@ func TestTimetable_ExtractTime(t *testing.T) {
 			},
 			value: "7:00",
 		},
+		{
+			tt: yonginbustimetable.Timetable{
+				Stop:     "용인출발",
+				DepartAt: "10:35(전세)평일운행",
+			},
+			value: "10:35",
+		},
 	}
 
 	for _, tc := range tcs {
