@@ -153,3 +153,31 @@ func TestBusTimetableExtractor_Extract(t *testing.T) {
 	assert.NotEmpty(t, timetable.Stops, "there are more than one bus stops required")
 	assert.NotEmpty(t, timetable.Timetables, "there are more than one bus timetable required")
 }
+
+func TestTimetable_ExtractTime(t *testing.T) {
+	tcs := []struct {
+		tt    yonginbustimetable.Timetable
+		value string
+	}{
+		{
+			tt: yonginbustimetable.Timetable{
+				Stop:     "용인출발",
+				DepartAt: "6:05",
+			},
+			value: "6:05",
+		},
+		{
+			tt: yonginbustimetable.Timetable{
+				Stop:     "용인출발",
+				DepartAt: "7:00(전세)평일운행",
+			},
+			value: "7:00",
+		},
+	}
+
+	for _, tc := range tcs {
+		s, _, err := tc.tt.ExtractTime()
+		assert.NoError(t, err)
+		assert.Equal(t, tc.value, s)
+	}
+}
