@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	insertBusQuery = "INSERT INTO bus_lists (name) VALUES (?)"
+	// insertBusQuery Query to Insert Bus Information to DuckDB
+	insertBusQuery = "INSERT OR IGNORE INTO bus_lists (name) VALUES (?)"
 )
 
 var CLI = &cli.App{
